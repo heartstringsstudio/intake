@@ -428,14 +428,6 @@
         </label>
       </div>
 
-      <div class="field">
-        <span class="cap">How would you like it delivered?</span>
-        <div class="occasions" id="delivery" style="grid-template-columns:1fr 1fr;">
-          <button type="button" class="occasion" data-del="Digital recording">Digital recording</button>
-          <button type="button" class="occasion" data-del="Printed lyrics keepsake sheet">Lyrics keepsake sheet</button>
-        </div>
-      </div>
-
       <div class="actions">
         <button class="go" id="essNext">Review everything</button>
       </div>
@@ -494,7 +486,7 @@ const state = {
   essentials: {
     forSpell: "", fromSpell: "", pronouns: "",
     mustInclude: "", mustAvoid: "", feel: "",
-    deadline: "", email: "", delivery: ""
+    deadline: "", email: ""
   }
 };
 
@@ -717,15 +709,6 @@ $("digSkip").addEventListener("click", () => {
 });
 
 /* ---- STAGE 4: Essentials ---- */
-let selectedDel = "";
-document.querySelectorAll("#delivery .occasion").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll("#delivery .occasion").forEach(b => b.classList.remove("sel"));
-    btn.classList.add("sel");
-    selectedDel = btn.dataset.del;
-  });
-});
-
 function goEssentials(){
   $("forSpell").value = state.forName;
   $("fromSpell").value = state.fromName;
@@ -742,7 +725,6 @@ $("essNext").addEventListener("click", () => {
   e.feel = $("feel").value.trim();
   e.deadline = $("deadline").value;
   e.email = $("email").value.trim();
-  e.delivery = selectedDel;
   buildSummary();
   showStage("stage-confirm");
 });
@@ -775,7 +757,6 @@ function buildSummary(){
   html += row("Feel / sound", e.feel);
   html += row("Hoping for it by", e.deadline);
   html += row("Contact email", e.email);
-  html += row("Delivery", e.delivery);
   $("summary").innerHTML = html;
 }
 
@@ -808,7 +789,6 @@ $("sendBtn").addEventListener("click", async () => {
     feel_or_genre: e.feel,
     deadline: e.deadline,
     contact_email: e.email,
-    delivery_preference: e.delivery,
     _full_transcript: buildTranscript()
   };
 
