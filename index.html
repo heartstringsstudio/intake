@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heartstrings Studio — Story Intake</title>
+<style>
+  :root {
+    --bg: #f3ece1;
+    --bg-warm: #efe5d6;
+    --ink: #3a3027;
+    --ink-soft: #6b5d4f;
+    --accent: #9a5b3f;
+    --accent-deep: #7d442c;
+    --line: #d9cbb6;
+    --card: #fbf7f0;
+    --gold: #c79a5b;
+    --shadow: rgba(58, 48, 39, 0.12);
+    --pace: 0.45s;
+    --gap: 1.4rem;
+  }
+  /* Memorial mode: cooler, softer, more air */
+  body.memorial {
+    --bg: #eef0ee;
+    --bg-warm: #e7eae8;
+    --ink: #3c3f41;
+    --ink-soft: #6e7375;
+    --accent: #6f7e76;
+    --accent-deep: #586a61;
+    --line: #d2d8d4;
+    --card: #f8faf9;
+    --gold: #a7a17f;
+    --pace: 0.7s;
+    --gap: 2.1rem;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    transition: background var(--pace) ease, color var(--pace) ease;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 1.25rem 4rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header.site {
+    text-align: center;
+    padding: 2.4rem 0 1.6rem;
+  }
+  header.site .mark {
+    font-size: 0.78rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 600;
+  }
+  header.site .rule {
+    width: 42px;
+    height: 2px;
+    background: var(--gold);
+    margin: 0.8rem auto 0;
+    border: none;
+  }
+
+  main { flex: 1 0 auto; }
+
+  /* Stage screens */
+  .stage { display: none; animation: rise var(--pace) ease both; }
+  .stage.active { display: block; }
+  body.memorial .stage { animation-duration: var(--pace); }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .lede {
+    font-size: 1.5rem;
+    line-height: 1.4;
+    margin: 0 0 0.4rem;
+    color: var(--ink);
+  }
+  .sub {
+    color: var(--ink-soft);
+    font-size: 1.02rem;
+    margin: 0 0 var(--gap);
+  }
+  .quiet {
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    font-style: italic;
+  }
+
+  label.field { display: block; margin-bottom: var(--gap); }
+  label.field .cap {
+    display: block;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.45rem;
+    font-weight: 600;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="date"],
+  textarea,
+  select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 1.05rem;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.8rem 0.9rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  textarea {
+    min-height: 150px;
+    resize: vertical;
+    line-height: 1.55;
+  }
+  textarea.big { min-height: 200px; }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(154, 91, 63, 0.13);
+  }
+  body.memorial input:focus,
+  body.memorial textarea:focus,
+  body.memorial select:focus {
+    box-shadow: 0 0 0 3px rgba(111, 126, 118, 0.16);
+  }
+
+  /* Occasion picker */
+  .occasions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.7rem;
+    margin-bottom: var(--gap);
+  }
+  .occasion {
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 10px;
+    padding: 0.9rem 0.7rem;
+    text-align: center;
+    cursor: pointer;
+    font-size: 1.02rem;
+    color: var(--ink);
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+  .occasion:hover { border-color: var(--accent); }
+  .occasion.sel {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .row { display: flex; gap: 0.9rem; flex-wrap: wrap; }
+  .row > * { flex: 1 1 220px; }
+
+  /* Buttons */
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.6rem;
+    flex-wrap: wrap;
+  }
+  button.go {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    border-radius: 30px;
+    padding: 0.8rem 2rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+  }
+  button.go:hover { background: var(--accent-deep); }
+  button.go:active { transform: translateY(1px); }
+  button.go:disabled { opacity: 0.45; cursor: default; }
+
+  button.skip {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    padding: 0.4rem 0;
+  }
+  button.skip:hover { color: var(--accent); }
+
+  /* Progress dots */
+  .dots {
+    display: flex;
+    gap: 0.45rem;
+    justify-content: center;
+    margin: 0 0 1.8rem;
+  }
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--line);
+    transition: background var(--pace) ease, transform var(--pace) ease;
+  }
+  .dot.on { background: var(--accent); transform: scale(1.25); }
+
+  /* Thinking state */
+  .thinking { text-align: center; padding: 3rem 1rem; }
+  .thinking p { color: var(--ink-soft); font-size: 1.15rem; font-style: italic; }
+  .pulse {
+    width: 12px; height: 12px;
+    margin: 0 auto 1.4rem;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: breathe 1.8s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.35; transform: scale(0.85); }
+    50%      { opacity: 1;    transform: scale(1.15); }
+  }
+
+  /* Reassurance note */
+  .note {
+    background: var(--bg-warm);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 8px 8px 0;
+    padding: 0.9rem 1.1rem;
+    margin: 0 0 var(--gap);
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+  }
+
+  /* Summary */
+  .summary { margin-bottom: var(--gap); }
+  .summary .item {
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .summary .item:last-child { border-bottom: none; }
+  .summary .k {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.76rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.2rem;
+  }
+  .summary .v { color: var(--ink); white-space: pre-wrap; }
+  .summary .v.empty { color: var(--ink-soft); font-style: italic; }
+
+  /* Thank you */
+  .thanks { text-align: center; padding: 2.5rem 0; }
+  .thanks .lede { font-size: 1.7rem; }
+
+  .err {
+    color: #8a3b2a;
+    background: #f6e3dc;
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+  }
+
+  footer.site {
+    text-align: center;
+    padding: 2.5rem 0 1rem;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  footer.site .name { color: var(--accent); letter-spacing: 0.1em; }
+
+  @media (max-width: 480px) {
+    .lede { font-size: 1.3rem; }
+    .occasions { grid-template-columns: 1fr 1fr; }
+    header.site { padding: 1.8rem 0 1.2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site">
+    <div class="mark">Heartstrings Studio</div>
+    <hr class="rule">
+  </header>
+
+  <main>
+    <div class="dots" id="dots" aria-hidden="true"></div>
+
+    <!-- STAGE 1 — ROUTE -->
+    <section class="stage active" id="stage-route">
+      <h1 class="lede">Let's begin with the heart of it.</h1>
+      <p class="sub">A song starts with two people — the one it's for, and the one it comes from.</p>
+
+      <label class="field">
+        <span class="cap">This song is for</span>
+        <input type="text" id="forName" placeholder="Their name" autocomplete="off">
+      </label>
+
+      <label class="field">
+        <span class="cap">And it comes from</span>
+        <input type="text" id="fromName" placeholder="Your name, or who it's from" autocomplete="off">
+      </label>
+
+      <div class="field">
+        <span class="cap">What's the occasion?</span>
+        <div class="occasions" id="occasions">
+          <button type="button" class="occasion" data-occ="Wedding">Wedding</button>
+          <button type="button" class="occasion" data-occ="Memorial">Memorial</button>
+          <button type="button" class="occasion" data-occ="Milestone">Milestone</button>
+          <button type="button" class="occasion" data-occ="Tribute">Tribute</button>
+          <button type="button" class="occasion" data-occ="Other">Something else</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="go" id="routeNext" disabled>Go on</button>
+      </div>
+    </section>
+
+    <!-- STAGE 2 — OPEN DOOR -->
+    <section class="stage" id="stage-open">
+      <h1 class="lede" id="openPrompt">Tell me about them.</h1>
+      <p class="sub" id="openSub">What's the first thing that comes to mind?</p>
+      <div class="note" id="openReassure" style="display:none;"></div>
+
+      <label class="field">
+        <span class="cap">In your own words</span>
+        <textarea id="openAnswer" class="big" placeholder="There's no right way to start. Just begin wherever feels true."></textarea>
+      </label>
+
+      <div class="actions">
+        <button class="go" id="openNext">Go on</button>
+      </div>
+    </section>
+
+    <!-- STAGE 3 — THE DIG -->
+    <section class="stage" id="stage-dig">
+      <div class="thinking" id="thinking" style="display:none;">
+        <div class="pulse"></div>
+        <p id="thinkingMsg">One moment…</p>
+      </div>
+
+      <div id="digQuestion" style="display:none;">
+        <h1 class="lede" id="digPrompt"></h1>
+        <label class="field">
+          <span class="cap">Whatever comes to you</span>
+          <textarea id="digAnswer"></textarea>
+        </label>
+        <div class="actions">
+          <button class="go" id="digNext">Go on</button>
+          <button class="skip" id="digSkip">I'd rather not say — skip this</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAGE 4 — ESSENTIALS -->
+    <section class="stage" id="stage-essentials">
+      <h1 class="lede">A few practical things.</h1>
+      <p class="sub">So everything lands just right.</p>
+
+      <div class="note">First, let's make sure the names are spelled exactly the way you want to see them.</div>
+
+      <div class="row">
+        <label class="field">
+          <span class="cap">Spelling — for</span>
+          <input type="text" id="forSpell" autocomplete="off">
+        </label>
+        <label class="field">
+          <span class="cap">Spelling — from</span>
+          <input type="text" id="fromSpell" autocomplete="off">
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="cap">Pronouns for the person it's about</span>
+        <input type="text" id="pronouns" placeholder="she / he / they — or however they'd say it" autocomplete="off">
+      </label>
+
+      <label class="field">
+        <span class="cap">Any words or names that must appear</span>
+        <textarea id="mustInclude" placeholder="A nickname, a place, a line — anything that has to be in there"></textarea>
+      </label>
+
+      <label class="field">
+        <span class="cap">Anything that must <em>not</em> appear</span>
+        <textarea id="mustAvoid" placeholder="Names, subjects, or anything best left out"></textarea>
+      </label>
+
+      <label class="field">
+        <span class="cap">A feel or a sound you're hoping for</span>
+        <input type="text" id="feel" placeholder="Old-time, gentle, upbeat… or 'you choose'" autocomplete="off">
+      </label>
+
+      <div class="row">
+        <label class="field">
+          <span class="cap">Is there a date you're working toward?</span>
+          <input type="date" id="deadline">
+        </label>
+        <label class="field">
+          <span class="cap">Best email to reach you</span>
+          <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+        </label>
+      </div>
+
+      <div class="field">
+        <span class="cap">How would you like it delivered?</span>
+        <div class="occasions" id="delivery" style="grid-template-columns:1fr 1fr;">
+          <button type="button" class="occasion" data-del="Digital recording">Digital recording</button>
+          <button type="button" class="occasion" data-del="Printed lyrics keepsake sheet">Lyrics keepsake sheet</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="go" id="essNext">Review everything</button>
+      </div>
+    </section>
+
+    <!-- STAGE 5 — CONFIRM -->
+    <section class="stage" id="stage-confirm">
+      <h1 class="lede">Here's everything you've shared.</h1>
+      <p class="sub">Take a look. When it feels right, send it our way.</p>
+      <div class="err" id="sendErr" style="display:none;"></div>
+      <div class="summary" id="summary"></div>
+      <div class="actions">
+        <button class="go" id="sendBtn">Send to the studio</button>
+        <button class="skip" id="backBtn">Go back and adjust</button>
+      </div>
+    </section>
+
+    <!-- DONE -->
+    <section class="stage" id="stage-done">
+      <div class="thanks">
+        <h1 class="lede">Thank you. We've got it.</h1>
+        <p class="sub" id="doneMsg">What you've shared is in good hands. We'll sit with it, then reach out to you soon.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    Made with care at <span class="name">Heartstrings Studio</span><br>
+    Appalachian West Virginia
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — paste your deployed Cloudflare Worker URL here.
+   ============================================================ */
+const WORKER_URL = "https://YOUR-WORKER-SUBDOMAIN.workers.dev";
+
+const FORMSPREE_URL = "https://formspree.io/f/xykbvdrb";
+
+/* ---- State ---- */
+const state = {
+  forName: "",
+  fromName: "",
+  occasion: "",
+  openAnswer: "",
+  digRound: 0,
+  questionsAsked: 0,
+  extracted: { sensory: "", phrase: "", moment: "", emotional_core: "" },
+  // pending questions queued for the current round
+  queue: [],
+  transcript: [],   // { q, a }
+  essentials: {
+    forSpell: "", fromSpell: "", pronouns: "",
+    mustInclude: "", mustAvoid: "", feel: "",
+    deadline: "", email: "", delivery: ""
+  }
+};
+
+const STAGES = ["stage-route","stage-open","stage-dig","stage-essentials","stage-confirm","stage-done"];
+
+function isMemorial() { return state.occasion === "Memorial"; }
+function maxRounds()  { return isMemorial() ? 1 : 2; }
+function maxQuestions(){ return isMemorial() ? 2 : 4; }
+
+function $(id){ return document.getElementById(id); }
+
+function showStage(id){
+  STAGES.forEach(s => $(s).classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  paintDots(id);
+}
+
+function paintDots(id){
+  const order = ["stage-route","stage-open","stage-dig","stage-essentials","stage-confirm"];
+  const idx = order.indexOf(id);
+  const dots = $("dots");
+  dots.style.display = (id === "stage-done") ? "none" : "flex";
+  dots.innerHTML = "";
+  order.forEach((_, i) => {
+    const d = document.createElement("span");
+    d.className = "dot" + (i <= idx ? " on" : "");
+    dots.appendChild(d);
+  });
+}
+
+/* ---- STAGE 1: Route ---- */
+let selectedOcc = "";
+document.querySelectorAll("#occasions .occasion").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#occasions .occasion").forEach(b => b.classList.remove("sel"));
+    btn.classList.add("sel");
+    selectedOcc = btn.dataset.occ;
+    checkRoute();
+  });
+});
+["forName","fromName"].forEach(id => $(id).addEventListener("input", checkRoute));
+
+function checkRoute(){
+  const ok = $("forName").value.trim() && $("fromName").value.trim() && selectedOcc;
+  $("routeNext").disabled = !ok;
+}
+
+$("routeNext").addEventListener("click", () => {
+  state.forName = $("forName").value.trim();
+  state.fromName = $("fromName").value.trim();
+  state.occasion = selectedOcc;
+  state.essentials.forSpell = state.forName;
+  state.essentials.fromSpell = state.fromName;
+
+  document.body.classList.toggle("memorial", isMemorial());
+  setupOpenDoor();
+  showStage("stage-open");
+});
+
+/* ---- STAGE 2: Open door ---- */
+function setupOpenDoor(){
+  const name = state.forName;
+  if (isMemorial()) {
+    $("openPrompt").textContent = `Tell me about ${name}, when you're ready.`;
+    $("openSub").textContent = "Whatever you'd like us to know. There's no need to say it all at once.";
+    $("openReassure").style.display = "block";
+    $("openReassure").textContent =
+      "There are no wrong answers here, and you can share as little as feels right. " +
+      "We're only trying to know " + name + " a little, through your eyes.";
+    $("openAnswer").placeholder = "Maybe it's a small thing — the way they laughed, a habit, a corner of a kitchen. Begin anywhere.";
+  } else {
+    $("openPrompt").textContent = `Tell me about ${name}.`;
+    $("openSub").textContent = "What's the first thing that comes to mind?";
+    $("openReassure").style.display = "none";
+    $("openAnswer").placeholder = "There's no right way to start. Just begin wherever feels true.";
+  }
+}
+
+$("openNext").addEventListener("click", () => {
+  state.openAnswer = $("openAnswer").value.trim();
+  state.transcript.push({ q: `(Opening — about ${state.forName})`, a: state.openAnswer || "(left blank)" });
+  showStage("stage-dig");
+  runDig();
+});
+
+/* ---- STAGE 3: The dig ---- */
+function buildMessages(){
+  // First user turn: route context + open answer
+  let opener = `Context for you (not to repeat back): This song is FOR ${state.forName}, ` +
+    `and it comes FROM ${state.fromName}. The occasion is a ${state.occasion}.\n\n` +
+    `Here is what they first told me about ${state.forName}:\n"${state.openAnswer || "(they didn't write much yet)"}"`;
+
+  const messages = [{ role: "user", content: opener }];
+
+  // Replay prior rounds as assistant questions + user answers
+  state.transcript.slice(1).forEach(pair => {
+    messages.push({ role: "assistant", content: pair.q });
+    messages.push({ role: "user", content: pair.a || "(I'd rather not say)" });
+  });
+  return messages;
+}
+
+async function callWorker(){
+  const res = await fetch(WORKER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages: buildMessages() })
+  });
+  if (!res.ok) throw new Error("worker " + res.status);
+  const data = await res.json();
+  // Anthropic shape: { content: [{ type:"text", text:"..." }], ... }
+  let text = "";
+  if (data && Array.isArray(data.content)) {
+    text = data.content.map(b => b.text || "").join("");
+  } else if (typeof data.text === "string") {
+    text = data.text;
+  }
+  return parseModel(text);
+}
+
+function parseModel(raw){
+  if (!raw) throw new Error("empty");
+  let t = raw.trim();
+  // strip stray code fences
+  t = t.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  // grab the outermost JSON object if there's surrounding prose
+  const first = t.indexOf("{");
+  const last = t.lastIndexOf("}");
+  if (first !== -1 && last !== -1) t = t.slice(first, last + 1);
+  const obj = JSON.parse(t);
+  return {
+    questions: Array.isArray(obj.questions) ? obj.questions.filter(q => typeof q === "string" && q.trim()) : [],
+    extracted: obj.extracted && typeof obj.extracted === "object" ? obj.extracted : {},
+    complete: !!obj.complete
+  };
+}
+
+function showThinking(on){
+  $("thinking").style.display = on ? "block" : "none";
+  $("digQuestion").style.display = on ? "none" : "block";
+  if (on) {
+    const msgs = isMemorial()
+      ? ["One moment…", "Taking a breath…"]
+      : ["One moment…", "Sitting with that…", "Thinking on it…"];
+    $("thinkingMsg").textContent = msgs[Math.floor(Math.random() * msgs.length)];
+  }
+}
+
+async function runDig(){
+  showThinking(true);
+  try {
+    const result = await callWorker();
+    // merge any extracted material
+    ["sensory","phrase","moment","emotional_core"].forEach(k => {
+      if (result.extracted[k] && !state.extracted[k]) state.extracted[k] = result.extracted[k];
+    });
+    state.digRound++;
+
+    let qs = result.questions || [];
+    // respect total question cap
+    const remaining = maxQuestions() - state.questionsAsked;
+    if (qs.length > remaining) qs = qs.slice(0, Math.max(0, remaining));
+
+    if (result.complete || qs.length === 0 || remaining <= 0) {
+      goEssentials();
+      return;
+    }
+    state.queue = qs;
+    showNextQuestion();
+  } catch (e) {
+    // fail gracefully — skip straight to essentials
+    goEssentials();
+  }
+}
+
+function showNextQuestion(){
+  if (state.queue.length === 0) {
+    // round done — maybe another round
+    if (state.digRound < maxRounds() && state.questionsAsked < maxQuestions()) {
+      runDig();
+    } else {
+      goEssentials();
+    }
+    return;
+  }
+  const q = state.queue.shift();
+  state.currentQ = q;
+  showThinking(false);
+  $("digPrompt").textContent = q;
+  $("digAnswer").value = "";
+  $("digAnswer").focus();
+}
+
+function recordDig(answer){
+  state.transcript.push({ q: state.currentQ, a: answer });
+  state.questionsAsked++;
+  showNextQuestion();
+}
+
+$("digNext").addEventListener("click", () => {
+  recordDig($("digAnswer").value.trim() || "(left blank)");
+});
+$("digSkip").addEventListener("click", () => {
+  recordDig("(I'd rather not say)");
+});
+
+/* ---- STAGE 4: Essentials ---- */
+let selectedDel = "";
+document.querySelectorAll("#delivery .occasion").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#delivery .occasion").forEach(b => b.classList.remove("sel"));
+    btn.classList.add("sel");
+    selectedDel = btn.dataset.del;
+  });
+});
+
+function goEssentials(){
+  $("forSpell").value = state.forName;
+  $("fromSpell").value = state.fromName;
+  showStage("stage-essentials");
+}
+
+$("essNext").addEventListener("click", () => {
+  const e = state.essentials;
+  e.forSpell = $("forSpell").value.trim() || state.forName;
+  e.fromSpell = $("fromSpell").value.trim() || state.fromName;
+  e.pronouns = $("pronouns").value.trim();
+  e.mustInclude = $("mustInclude").value.trim();
+  e.mustAvoid = $("mustAvoid").value.trim();
+  e.feel = $("feel").value.trim();
+  e.deadline = $("deadline").value;
+  e.email = $("email").value.trim();
+  e.delivery = selectedDel;
+  buildSummary();
+  showStage("stage-confirm");
+});
+
+/* ---- STAGE 5: Confirm ---- */
+function row(k, v){
+  const empty = !v || !String(v).trim();
+  return `<div class="item"><div class="k">${k}</div>` +
+    `<div class="v${empty ? " empty" : ""}">${empty ? "—" : escapeHtml(v)}</div></div>`;
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]));
+}
+
+function buildSummary(){
+  const e = state.essentials;
+  const ex = state.extracted;
+  let html = "";
+  html += row("Occasion", state.occasion);
+  html += row("For", e.forSpell);
+  html += row("From", e.fromSpell);
+  html += row("Pronouns", e.pronouns);
+  html += row("In their own words", state.openAnswer);
+  html += row("A sensory detail", ex.sensory);
+  html += row("Something they said", ex.phrase);
+  html += row("A small moment", ex.moment);
+  html += row("The heart of it", ex.emotional_core);
+  html += row("Must include", e.mustInclude);
+  html += row("Must not include", e.mustAvoid);
+  html += row("Feel / sound", e.feel);
+  html += row("Hoping for it by", e.deadline);
+  html += row("Contact email", e.email);
+  html += row("Delivery", e.delivery);
+  $("summary").innerHTML = html;
+}
+
+function buildTranscript(){
+  return state.transcript.map(p => `Q: ${p.q}\nA: ${p.a}`).join("\n\n");
+}
+
+$("backBtn").addEventListener("click", () => showStage("stage-essentials"));
+
+$("sendBtn").addEventListener("click", async () => {
+  const btn = $("sendBtn");
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+  $("sendErr").style.display = "none";
+
+  const e = state.essentials;
+  const ex = state.extracted;
+  const payload = {
+    occasion: state.occasion,
+    song_for: e.forSpell,
+    song_from: e.fromSpell,
+    pronouns: e.pronouns,
+    opening_words: state.openAnswer,
+    detail_sensory: ex.sensory,
+    detail_phrase: ex.phrase,
+    detail_moment: ex.moment,
+    emotional_core: ex.emotional_core,
+    must_include: e.mustInclude,
+    must_avoid: e.mustAvoid,
+    feel_or_genre: e.feel,
+    deadline: e.deadline,
+    contact_email: e.email,
+    delivery_preference: e.delivery,
+    _full_transcript: buildTranscript()
+  };
+
+  try {
+    const res = await fetch(FORMSPREE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error("formspree " + res.status);
+    if (isMemorial()) {
+      $("doneMsg").textContent =
+        "Thank you for trusting us with this. What you've shared is held gently, and we'll reach out to you soon.";
+    }
+    showStage("stage-done");
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = "Send to the studio";
+    $("sendErr").style.display = "block";
+    $("sendErr").textContent =
+      "Something didn't go through just then. Give it another moment and try once more.";
+  }
+});
+
+/* init */
+paintDots("stage-route");
+</script>
+</body>
+</html>

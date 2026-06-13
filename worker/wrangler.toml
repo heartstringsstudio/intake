@@ -1,0 +1,8 @@
+name = "heartstrings-intake"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Optional: lock the proxy to your GitHub Pages origin instead of "*".
+# Uncomment and set to your published page's origin (no trailing slash).
+# [vars]
+# ALLOWED_ORIGIN = "https://YOURUSERNAME.github.io"
