@@ -476,6 +476,9 @@ const WORKER_URL = "https://quiet-limit-049d.heartstringsstudiowv.workers.dev";
 
 const FORMSPREE_URL = "https://formspree.io/f/xykbvdrb";
 
+// Add ?debug=1 to the page URL to see the real error if the follow-up step fails.
+const DEBUG = /[?&]debug=1\b/.test(window.location.search);
+
 /* ---- State ---- */
 const state = {
   forName: "",
@@ -601,7 +604,10 @@ async function callWorker(){
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ messages: buildMessages() })
   });
-  if (!res.ok) throw new Error("worker " + res.status);
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error("Worker returned HTTP " + res.status + ". " + detail);
+  }
   const data = await res.json();
   // Anthropic shape: { content: [{ type:"text", text:"..." }], ... }
   let text = "";
@@ -663,6 +669,17 @@ async function runDig(){
     state.queue = qs;
     showNextQuestion();
   } catch (e) {
+    // In debug mode, show the real error on screen instead of skipping.
+    if (DEBUG) {
+      showThinking(false);
+      $("digQuestion").style.display = "none";
+      const box = document.createElement("div");
+      box.className = "err";
+      box.style.whiteSpace = "pre-wrap";
+      box.textContent = "DEBUG — the follow-up step failed:\n\n" + (e && e.message ? e.message : String(e));
+      $("stage-dig").appendChild(box);
+      return;
+    }
     // fail gracefully — skip straight to essentials
     goEssentials();
   }
