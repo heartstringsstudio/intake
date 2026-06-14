@@ -877,8 +877,23 @@ $("backBtn").addEventListener("click", () => {
   showStage("stage-essentials");
 });
 
+function looksLikeEmail(v){
+  // Deliberately permissive: just enough to catch blanks and obvious typos.
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+
 $("sendBtn").addEventListener("click", async () => {
   readConfirmEdits();
+
+  if (!looksLikeEmail(state.essentials.email)) {
+    $("sendErr").style.display = "block";
+    $("sendErr").textContent =
+      "We'll need a good email to reach you — could you check that one over?";
+    const field = $("edit-email");
+    if (field) field.focus();
+    return;
+  }
+
   const btn = $("sendBtn");
   btn.disabled = true;
   btn.textContent = "Sending…";

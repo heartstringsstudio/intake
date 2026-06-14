@@ -2,7 +2,18 @@ name = "heartstrings-intake"
 main = "worker.js"
 compatibility_date = "2024-11-01"
 
-# Optional: lock the proxy to your GitHub Pages origin instead of "*".
-# Uncomment and set to your published page's origin (no trailing slash).
-# [vars]
-# ALLOWED_ORIGIN = "https://YOURUSERNAME.github.io"
+# Lock the proxy to the published page's origin(s). Without this the Worker is
+# an OPEN proxy — anyone who finds its URL can spend the studio's Anthropic
+# credits. Comma-separate multiple origins (e.g. a GitHub Pages origin plus a
+# custom domain). No trailing slash. Update to match where the page is hosted.
+[vars]
+ALLOWED_ORIGIN = "https://heartstringsstudio.github.io"
+
+# Optional: per-IP rate limiting. Create a KV namespace and bind it as
+# RATE_LIMIT to turn it on (limits live in worker.js). Without this binding,
+# rate limiting is simply skipped.
+#   npx wrangler kv namespace create RATE_LIMIT
+# then paste the printed id below and redeploy.
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT"
+# id = "PASTE_NAMESPACE_ID_HERE"
