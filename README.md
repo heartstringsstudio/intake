@@ -38,10 +38,23 @@ npx wrangler secret put ANTHROPIC_API_KEY
 Copy the deployed URL that `wrangler deploy` printed — it looks like
 `https://heartstrings-intake.YOUR-SUBDOMAIN.workers.dev`.
 
-**Optional — lock down CORS:** by default the Worker accepts any origin. To
-restrict it to your published page, set `ALLOWED_ORIGIN` in
-`worker/wrangler.toml` to your GitHub Pages origin (e.g.
-`https://yourusername.github.io`) and run `npx wrangler deploy` again.
+**Lock the proxy to your page (important).** Left open, the Worker will proxy
+the Anthropic API for *anyone* who finds its URL — on your key, your bill. Set
+`ALLOWED_ORIGIN` in `worker/wrangler.toml` to your published page's origin
+(e.g. `https://heartstringsstudio.github.io`, comma-separate several, no
+trailing slash) and run `npx wrangler deploy` again. The Worker enforces this
+server-side, so it stops scripted callers, not just browsers. It also caps
+payload size by default.
+
+**Optional — rate limiting.** To throttle abusive traffic per IP, create a KV
+namespace and bind it as `RATE_LIMIT` (see `worker/wrangler.toml`):
+
+```bash
+npx wrangler kv namespace create RATE_LIMIT
+```
+
+Paste the printed id into `wrangler.toml`, uncomment the `[[kv_namespaces]]`
+block, and redeploy. Without the binding, rate limiting is simply skipped.
 
 ## 2. Point the page at the Worker
 
