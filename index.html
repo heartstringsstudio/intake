@@ -272,6 +272,22 @@
   }
   .summary .v { color: var(--ink); white-space: pre-wrap; }
   .summary .v.empty { color: var(--ink-soft); font-style: italic; }
+  .summary .edit-field {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 0.2rem 0;
+    outline: none;
+    resize: vertical;
+  }
+  .summary .edit-field:focus { border-bottom-color: var(--accent); }
+  .summary textarea.edit-field { min-height: 3em; }
 
   /* Thank you */
   .thanks { text-align: center; padding: 2.5rem 0; }
@@ -743,13 +759,21 @@ $("essNext").addEventListener("click", () => {
 });
 
 /* ---- STAGE 5: Confirm ---- */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]));
+}
 function row(k, v){
   const empty = !v || !String(v).trim();
   return `<div class="item"><div class="k">${k}</div>` +
     `<div class="v${empty ? " empty" : ""}">${empty ? "—" : escapeHtml(v)}</div></div>`;
 }
-function escapeHtml(s){
-  return String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c]));
+function editRow(k, id, v, type){
+  return `<div class="item"><div class="k">${k}</div>` +
+    `<input class="edit-field" id="${id}" type="${type || 'text'}" value="${escapeHtml(v || '')}"></div>`;
+}
+function editRowTA(k, id, v){
+  return `<div class="item"><div class="k">${k}</div>` +
+    `<textarea class="edit-field" id="${id}">${escapeHtml(v || '')}</textarea></div>`;
 }
 
 function buildSummary(){
@@ -757,29 +781,58 @@ function buildSummary(){
   const ex = state.extracted;
   let html = "";
   html += row("Occasion", state.occasion);
-  html += row("For", e.forSpell);
-  html += row("From", e.fromSpell);
-  html += row("Pronouns", e.pronouns);
-  html += row("In their own words", state.openAnswer);
-  html += row("A sensory detail", ex.sensory);
-  html += row("Something they said", ex.phrase);
-  html += row("A small moment", ex.moment);
-  html += row("The heart of it", ex.emotional_core);
-  html += row("Must include", e.mustInclude);
-  html += row("Must not include", e.mustAvoid);
-  html += row("Feel / sound", e.feel);
-  html += row("Hoping for it by", e.deadline);
-  html += row("Contact email", e.email);
+  html += editRow("For", "edit-forSpell", e.forSpell);
+  html += editRow("From", "edit-fromSpell", e.fromSpell);
+  html += editRow("Pronouns", "edit-pronouns", e.pronouns);
+  html += editRowTA("In their own words", "edit-openAnswer", state.openAnswer);
+  html += editRow("A sensory detail", "edit-sensory", ex.sensory);
+  html += editRow("Something they said", "edit-phrase", ex.phrase);
+  html += editRow("A small moment", "edit-moment", ex.moment);
+  html += editRow("The heart of it", "edit-emotional", ex.emotional_core);
+  html += editRowTA("Must include", "edit-mustInclude", e.mustInclude);
+  html += editRowTA("Must not include", "edit-mustAvoid", e.mustAvoid);
+  html += editRow("Feel / sound", "edit-feel", e.feel);
+  html += editRow("Hoping for it by", "edit-deadline", e.deadline, "date");
+  html += editRow("Contact email", "edit-email", e.email, "email");
   $("summary").innerHTML = html;
+}
+
+function readConfirmEdits(){
+  state.essentials.forSpell = $("edit-forSpell").value.trim() || state.forName;
+  state.essentials.fromSpell = $("edit-fromSpell").value.trim() || state.fromName;
+  state.essentials.pronouns = $("edit-pronouns").value.trim();
+  state.openAnswer = $("edit-openAnswer").value.trim();
+  state.extracted.sensory = $("edit-sensory").value.trim();
+  state.extracted.phrase = $("edit-phrase").value.trim();
+  state.extracted.moment = $("edit-moment").value.trim();
+  state.extracted.emotional_core = $("edit-emotional").value.trim();
+  state.essentials.mustInclude = $("edit-mustInclude").value.trim();
+  state.essentials.mustAvoid = $("edit-mustAvoid").value.trim();
+  state.essentials.feel = $("edit-feel").value.trim();
+  state.essentials.deadline = $("edit-deadline").value;
+  state.essentials.email = $("edit-email").value.trim();
 }
 
 function buildTranscript(){
   return state.transcript.map(p => `Q: ${p.q}\nA: ${p.a}`).join("\n\n");
 }
 
-$("backBtn").addEventListener("click", () => showStage("stage-essentials"));
+$("backBtn").addEventListener("click", () => {
+  readConfirmEdits();
+  const e = state.essentials;
+  $("forSpell").value = e.forSpell || state.forName;
+  $("fromSpell").value = e.fromSpell || state.fromName;
+  $("pronouns").value = e.pronouns;
+  $("mustInclude").value = e.mustInclude;
+  $("mustAvoid").value = e.mustAvoid;
+  $("feel").value = e.feel;
+  $("deadline").value = e.deadline;
+  $("email").value = e.email;
+  showStage("stage-essentials");
+});
 
 $("sendBtn").addEventListener("click", async () => {
+  readConfirmEdits();
   const btn = $("sendBtn");
   btn.disabled = true;
   btn.textContent = "Sending…";
