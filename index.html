@@ -383,6 +383,7 @@
       </label>
 
       <div class="actions">
+        <button class="skip" id="openBack">← Back</button>
         <button class="go" id="openNext">Go on</button>
       </div>
     </section>
@@ -401,6 +402,7 @@
           <textarea id="digAnswer"></textarea>
         </label>
         <div class="actions">
+          <button class="skip" id="digBack">← Back</button>
           <button class="go" id="digNext">Go on</button>
           <button class="skip" id="digSkip">I'd rather not say — skip this</button>
         </div>
@@ -457,6 +459,7 @@
       </div>
 
       <div class="actions">
+        <button class="skip" id="essBack">← Back</button>
         <button class="go" id="essNext">Review everything</button>
       </div>
     </section>
@@ -576,6 +579,15 @@ $("routeNext").addEventListener("click", () => {
   showStage("stage-open");
 });
 
+function resetDigState(){
+  state.digRound = 0;
+  state.questionsAsked = 0;
+  state.extracted = { sensory: "", phrase: "", moment: "", emotional_core: "" };
+  state.queue = [];
+  state.transcript = [];
+  state.currentQ = "";
+}
+
 /* ---- STAGE 2: Open door ---- */
 function setupOpenDoor(){
   const name = state.forName;
@@ -594,6 +606,19 @@ function setupOpenDoor(){
     $("openAnswer").placeholder = "There's no right way to start. Just begin wherever feels true.";
   }
 }
+
+$("openBack").addEventListener("click", () => {
+  // Restore stage-1 fields and selection, drop out of memorial mode
+  $("forName").value = state.forName;
+  $("fromName").value = state.fromName;
+  document.querySelectorAll("#occasions .occasion").forEach(btn => {
+    btn.classList.toggle("sel", btn.dataset.occ === state.occasion);
+  });
+  selectedOcc = state.occasion;
+  checkRoute();
+  document.body.classList.remove("memorial");
+  showStage("stage-route");
+});
 
 $("openNext").addEventListener("click", () => {
   state.openAnswer = $("openAnswer").value.trim();
@@ -736,6 +761,11 @@ $("digNext").addEventListener("click", () => {
 $("digSkip").addEventListener("click", () => {
   recordDig("(I'd rather not say)");
 });
+$("digBack").addEventListener("click", () => {
+  resetDigState();
+  $("openAnswer").value = state.openAnswer;
+  showStage("stage-open");
+});
 
 /* ---- STAGE 4: Essentials ---- */
 function goEssentials(){
@@ -743,6 +773,22 @@ function goEssentials(){
   $("fromSpell").value = state.fromName;
   showStage("stage-essentials");
 }
+
+$("essBack").addEventListener("click", () => {
+  // Save any partial essentials input, then go back to re-answer the opening question
+  const e = state.essentials;
+  e.forSpell = $("forSpell").value.trim() || state.forName;
+  e.fromSpell = $("fromSpell").value.trim() || state.fromName;
+  e.pronouns = $("pronouns").value.trim();
+  e.mustInclude = $("mustInclude").value.trim();
+  e.mustAvoid = $("mustAvoid").value.trim();
+  e.feel = $("feel").value.trim();
+  e.deadline = $("deadline").value;
+  e.email = $("email").value.trim();
+  resetDigState();
+  $("openAnswer").value = state.openAnswer;
+  showStage("stage-open");
+});
 
 $("essNext").addEventListener("click", () => {
   const e = state.essentials;
